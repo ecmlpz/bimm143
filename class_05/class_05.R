@@ -1,0 +1,87 @@
+5 + 5
+3 ^ 2
+sqrt(25)
+2 * (1+1)
+2*1+1
+exp(1)
+sqrt(25)
+exp(1)
+?exp
+log(2.718282)
+log(10, base=10)
+log(1.27)
+x=1:50
+
+plot(x)
+plot(x,sin(x))
+plot(x,sin(x),type = "l")
+plot(x,sin(x),type = "l",col="blue")
+plot(x,sin(x),type = "l",col="blue",lwd=2)
+plot(x,sin(x),type = "l",col="blue",lwd=2, xlab="my axis label")
+x <- 3*4
+x
+this_is_a_really_long_name <- 2.5
+this_is_a_really_long_name
+r_rocks <- 2^3
+r_rocks
+
+seq(1,10)
+?seq
+seq(1,10, by=2)
+example("seq")
+example("seq")
+date
+date()
+??"cross tabulate"
+library(help="base")
+length(3.1)
+x <- c(56,95.3,0.4)
+x
+y <- c(3.2,1.1,0.2)
+y
+x+y
+x-y
+x/y
+sqrt(x)
+round(sqrt(x),3)
+log(x)/2+1
+log(x)/(2+1)
+#x(2)
+x[2]
+x[3] <- 0.5
+?c()
+dat <- data.frame(id = letters[1:10], x = 1:10, y = 11:20)
+#view(dat)
+View(dat)
+letters[4]
+letters[1:10]
+dat[3,1]
+dat[3,2]
+dat[3,3]
+dat[3,]
+dat[,3]
+dat[,2]
+dat[4:6,3]
+head(dat)
+dim()
+dim(dat)
+nrow(dat)
+ncol(dat)
+dat[,2]
+dat[,2]>7
+myans.inds <-  dat[,2]>7
+myans.inds
+dat[myans.inds,2]
+#dat[myans.inds,]
+m <- c(1,5,2,10)
+x  <- c(1,5,2,10)
+x
+x>4
+#x[x>4]
+
+x <- 1:50
+
+x+5
+nrow(dat)
+
+

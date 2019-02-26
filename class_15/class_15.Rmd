@@ -1,0 +1,217 @@
+---
+title: "Class 15: Transcriptomics and the analysis of RNA-Seq "
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+counts <- read.csv("data/airway_scaledcounts.csv", stringsAsFactors = FALSE)
+metadata <-  read.csv("data/airway_metadata.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+dim(counts)
+```
+
+```{r}
+head(counts)
+```
+
+The column of the metadata should match the header/first row of the counts (above). 
+```{r}
+head(metadata)
+```
+
+```{r}
+colnames(counts)
+```
+
+```{r}
+metadata$id
+```
+
+
+Check for correspondence of matadata and countdata 
+```{r}
+colnames(counts)[-1] == metadata$id
+```
+
+
+Insert "all" to the previous and gives a single answer
+```{r}
+all(colnames(counts)[-1] == metadata$id)
+```
+
+
+First task, find which colums in **counts** correspond to the control conditions (i.e. no drug!). Then we can caluclate the mean count value for each gene.
+#control.inds <- metadata$dex == "control" -- gives us a TRUE/FALSE response to whether we have a control dex 
+# originally without "control.inds <-  metadata$id[control.inds]", was off by one 
+```{r}
+control.inds <- metadata$dex == "control"
+control.inds <-  metadata$id[control.inds]
+
+head(counts[,control.inds])
+```
+
+Calculate the mean counts value for all genes 
+```{r}
+control.mean <- rowSums(counts[,control.inds])/ncol(counts[,control.inds])
+names(control.mean) <- counts$ensgene
+head(control.mean)
+```
+
+
+Now do the same thing for the drug treated samples (i.e. *treated* columns)
+```{r}
+treated <- metadata[metadata[,"dex"] == "treated",]
+treated.mean <- rowSums( counts[ ,treated$id] )/ncol(counts[,treated$id]) 
+names(treated.mean) <- counts$ensgene
+
+```
+
+Combind the mean count values for contro and treated into a new data,frame called meancounts!
+```{r}
+meancounts <-  data.frame(control.mean, treated.mean)
+meancounts
+```
+
+```{r}
+colSums(meancounts)
+```
+
+Now we can plot the drug treated vs non-drug control count values 
+```{r}
+plot(meancounts$control.mean,meancounts$treated.mean)
+```
+
+Put 
+```{r}
+plot(log(meancounts$control.mean), log(meancounts$treated.mean))
+```
+
+
+We can find candidate differentially expressed genes by looking for genes with a large change between control and dex-treated samples. We usually look at the log2 of the fold change, because this has better mathematical properties.
+
+Here we calculate log2foldchange, add it to our meancounts data.frame and inspect the results either with the head() or the View() function for example.
+
+```{r}
+meancounts$log2fc <- log2(meancounts[,"treated.mean"]/meancounts[,"control.mean"])
+head(meancounts)
+```
+
+```{r}
+toy <- c(1,2,0,4,0)
+toy == 0
+which(toy == 0 )
+```
+
+```{r}
+toy <- meancounts[1:6,]
+toy[,1:2]
+which(toy[,1:2] == 0, arr.ind = TRUE)
+
+unique(which(toy[,1:2] == 0, arr.ind = TRUE)[,1])
+```
+Remove the zero entry genes from meancounts to produce **mycounts**
+```{r}
+zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
+
+to.rm <- unique(zero.vals[,1])
+mycounts <- meancounts[-to.rm,]
+head(mycounts)
+```
+
+```{r}
+up.ind <- mycounts$log2fc > 2
+down.ind <- mycounts$log2fc < (-2)
+```
+
+```{r}
+sum(up.ind)
+```
+should get *250*
+
+```{r}
+sum(down.ind)
+```
+
+
+
+There are 'sum(up.ind)' up regulated genes and 'sum(down.ind)' down regulated genes 
+
+```{r}
+head(mycounts[up.ind,])
+```
+
+## Adding annotation data 
+
+Use the **merge()** function to add annotation data from ensemble 
+
+```{r}
+anno <- read.csv("data/annotables_grch38.csv")
+head(anno)
+```
+
+```{r}
+mycounts.annotated <- merge(x=mycounts, y=anno, by.x = "row.names", by.y ="ensgene")
+head(mycounts.annotated) 
+```
+
+## DESeq2 analysis
+
+Now we do this analysis properly with p-values!
+
+```{r}
+library(DESeq2)
+```
+
+
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=counts, 
+                              colData=metadata, 
+                              design=~dex, 
+                              tidy=TRUE)
+dds
+```
+
+```{r}
+dds <- DESeq(dds)
+```
+
+```{r}
+res <- results(dds)
+head(res)
+```
+
+```{r}
+summary(res)
+```
+
+
+
+
+```{r}
+res05 <- results(dds, alpha=0.05)
+summary(res05)
+```
+
+
+```{r}
+plot(res$log2FoldChange, -log(res$padj))
+```
+
+```{r}
+mycols <- rep("gray", nrow(res05))
+mycols[abs(res05$log2FoldChange)]
+plot(res05$log2FoldChange, -log(res05$padj), col=mycols)
+```
+
+want one color for p<0.01 and other for p>2 
+abs line at -1, 1 
+
+
+
+

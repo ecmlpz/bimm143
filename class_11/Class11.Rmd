@@ -1,0 +1,114 @@
+---
+title: "Class 11: Structural Bioinfomatics 1"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Section 1. The PDB 
+
+Q1: Determine the percentage of structures solved by X-Ray and Electron Microscopy. From the website what proportion of structures are protein? Aim to have a rendered GitHub document with working code that yields your answers.
+
+```{r}
+stats <-read.csv("Data Export Summary.csv", row.names = 1)
+stats 
+```
+
+Total per row
+```{r}
+stats$Total
+```
+
+Total sum of all methods 
+```{r}
+sum(stats$Total)
+```
+
+How many of each? Percentage
+```{r}
+percentby.method <- stats$Total/sum(stats$Total) *100
+names(percentby.method) <-  rownames(stats)
+percentby.method
+```
+
+What percent of the data does proteins account for? 
+```{r}
+sum(stats$Proteins)/sum(stats$Total) * 100
+```
+
+Q2: Type HIV in the PDB website search box on the home page and determine how many HIV-1 protease structures are in the current PDB?
+1338
+
+## Section 3. Introduction to Bio3D in R
+
+First we have to load the package we want to use 
+```{r}
+library(bio3d)
+```
+
+Now we can use 
+```{r}
+pdb <- read.pdb("1hsg")
+```
+
+```{r}
+pdb
+```
+
+```{r}
+attributes(pdb)
+```
+
+```{r}
+head(pdb$atom)
+```
+
+```{r}
+str(pdb)
+```
+
+
+
+
+```{r}
+head( aa321(pdb$atom$resid))
+```
+
+
+We want to select out the protein and drug only parts of these molecular PDB files.
+```{r}
+protein.inds <- atom.select(pdb,"protein")
+protein.inds
+```
+
+```{r}
+prot.pdb <-  trim.pdb(pdb, prot.inds)
+write.pdb(prot.pdb, file = "protein.pdb")
+```
+
+Lets do the same thing for our drug 
+```{r}
+lig.inds <- atom.select(pdb,"ligand")
+lig.pdb <- trim.pdb(pdb, lig.inds)
+write.pdb(lig.pdb, file = "ligand.pdb")
+```
+
+```{r}
+install.packages("devtools")
+devtools::install_bitbucket("Grantlab/bio3d-view")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+

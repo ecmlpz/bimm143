@@ -51,14 +51,14 @@ First task, find which colums in **counts** correspond to the control conditions
 # originally without "control.inds <-  metadata$id[control.inds]", was off by one 
 ```{r}
 control.inds <- metadata$dex == "control"
-control.inds <-  metadata$id[control.inds]
+control.ids <-  metadata$id[control.inds]
 
-head(counts[,control.inds])
+head(counts[,control.ids])
 ```
 
 Calculate the mean counts value for all genes 
 ```{r}
-control.mean <- rowSums(counts[,control.inds])/ncol(counts[,control.inds])
+control.mean <- rowSums(counts[,control.ids])/ncol(counts[,control.ids])
 names(control.mean) <- counts$ensgene
 head(control.mean)
 ```
@@ -75,7 +75,6 @@ names(treated.mean) <- counts$ensgene
 Combind the mean count values for contro and treated into a new data,frame called meancounts!
 ```{r}
 meancounts <-  data.frame(control.mean, treated.mean)
-meancounts
 ```
 
 ```{r}
@@ -87,9 +86,9 @@ Now we can plot the drug treated vs non-drug control count values
 plot(meancounts$control.mean,meancounts$treated.mean)
 ```
 
-Put 
+Put this on a log log plot to help see the data!
 ```{r}
-plot(log(meancounts$control.mean), log(meancounts$treated.mean))
+plot(meancounts$control.mean,meancounts$treated.mean, log = "xy")
 ```
 
 
@@ -111,10 +110,15 @@ which(toy == 0 )
 ```{r}
 toy <- meancounts[1:6,]
 toy[,1:2]
+```
+```{r}
 which(toy[,1:2] == 0, arr.ind = TRUE)
+```
 
+```{r}
 unique(which(toy[,1:2] == 0, arr.ind = TRUE)[,1])
 ```
+
 Remove the zero entry genes from meancounts to produce **mycounts**
 ```{r}
 zero.vals <- which(meancounts[,1:2]==0, arr.ind=TRUE)
@@ -132,7 +136,6 @@ down.ind <- mycounts$log2fc < (-2)
 ```{r}
 sum(up.ind)
 ```
-should get *250*
 
 ```{r}
 sum(down.ind)
@@ -205,12 +208,27 @@ plot(res$log2FoldChange, -log(res$padj))
 
 ```{r}
 mycols <- rep("gray", nrow(res05))
-mycols[abs(res05$log2FoldChange)]
 plot(res05$log2FoldChange, -log(res05$padj), col=mycols)
 ```
 
-want one color for p<0.01 and other for p>2 
-abs line at -1, 1 
+
+
+```{r}
+#Setup  your point color vector 
+mycols <- rep("gray", nrow(res05))
+mycols[ abs(res05$log2FoldChange) > 2 ]  <- "red" 
+
+inds <- (res05$padj < 0.01) & (abs(res05$log2FoldChange) > 2 )
+mycols[ inds ] <- "blue"
+
+#Volcano plot  with custom colors 
+plot( res05$log2FoldChange,  -log(res05$padj), 
+ col=mycols, ylab="-Log(P-value)", xlab="Log2(FoldChange)" )
+
+abline(v=c(-2,2), col="gray", lty=2)
+abline(h=-log(0.1), col="gray", lty=2)
+```
+
 
 
 

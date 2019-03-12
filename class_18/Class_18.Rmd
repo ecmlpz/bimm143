@@ -1,0 +1,149 @@
+---
+title: "Class 18: Cancer Genomics"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r echo=FALSE, message=FALSE}
+source("https://bioconductor.org/biocLite.R")
+```
+
+```{r echo=FALSE, message=FALSE}
+biocLite(c("GenomicDataCommons", "TCGAbiolinks", "maftools"))
+```
+
+```{r}
+library(GenomicDataCommons)
+library(TCGAbiolinks)
+library(maftools)
+```
+
+```{r}
+GenomicDataCommons::status() 
+```
+
+```{r}
+cases_by_project <- cases() %>%
+  facet("project.project_id") %>%
+  aggregations()
+head(cases_by_project)
+```
+
+```{r}
+x <- cases_by_project$project.project_id
+
+barplot(x$doc_count, names.arg = x$key, las=2, log ="y")
+
+# Make a custom color vector for our plot
+colvec <- rep("lightblue", nrow(x))
+#colvec[] <- "red"
+
+# Plot with 'log' for y axis and rotate labels with 'las'
+#par(___)  
+#barplot(___, names.arg=___, log="y", col=colvec, las=2)
+```
+
+```{r}
+maf.file <- GDCquery_Maf(tumor="PAAD", pipelines = "mutect")
+```
+
+```{r}
+head(maf.file)
+```
+
+```{r}
+vars = read.maf(maf = maf.file, verbose = FALSE)
+plotmafSummary(vars)
+```
+
+
+```{r}
+oncoplot(maf = vars, top = 10)
+```
+
+```{r}
+lollipopPlot(vars, gene='KRAS')
+```
+
+
+## Part II 
+
+```{r}
+library(bio3d)
+
+# if file located in downloads use:
+# seqs <- read.fasta("~/Downloads/lecture18_sequences.fa"")
+
+
+seqs <- read.fasta("lecture18_sequences.fa")
+seqs 
+```
+
+
+```{r}
+## Calculate positional identity scores
+ide <- conserv(seqs$ali, method="identity")
+mutant.sites <- which(ide < 1) 
+
+## Exclude gap positions from analysis
+gaps <- gap.inspect(seqs)
+mutant.sites <- mutant.sites[mutant.sites %in% gaps$f.inds]
+
+mutant.sites
+
+```
+
+```{r}
+## Make a "names" label for our output sequences (one per mutant)
+mutant.names <- paste0(seqs$ali["P53_wt",mutant.sites],
+                       mutant.sites,
+                       seqs$ali["P53_mutant",mutant.sites])
+
+mutant.names
+```
+
+
+```{r}
+## Sequence positions surounding each mutant site
+start.position <- mutant.sites - 8
+end.position <-  mutant.sites + 8
+
+# Blank matrix to store sub-sequences
+store.seqs <- matrix("-", nrow=length(mutant.sites), ncol=17)
+rownames(store.seqs) <- mutant.names
+
+## Extract each sub-sequence
+for(i in 1:length(mutant.sites)) {
+  store.seqs[i,] <- seqs$ali["P53_mutant",start.position[i]:end.position[i]]
+}
+
+store.seqs
+```
+
+```{r}
+## Output a FASTA file for further analysis
+write.fasta(seqs=store.seqs, ids=mutant.names, file="subsequences.fa")
+```
+
+```{r}
+library(readr)
+result <- read_csv("result.csv")
+View(result)
+```
+
+```{r}
+# look at rows 1,2,3,7 
+result[1:3,]
+```
+
+
+
+
+
+
+
+

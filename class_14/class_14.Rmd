@@ -17,6 +17,7 @@ mxl <-  read.csv("373531-SampleGenotypes-Homo_sapiens_Variation_Sample_rs8067378
 head(mxl)
 ```
 
+What are the genotypes here?
 ```{r}
 mxl$Genotype..forward.strand.
 ```
